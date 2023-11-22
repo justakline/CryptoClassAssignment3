@@ -1,16 +1,23 @@
 
 import {Alert} from '@mui/material'
-const AppCopmanyForm = (props) =>{
+import { useState } from 'react';
+const AppCompanyForm = (props) =>{
+
+  var {company, setCompany} = useState("")  
+  const handleSubmit = (newName) =>{
+    console.log("submit")
+  }
+
 
     return <div className="AddCompany-Form">
-    <form>
+   <form onSubmit={() =>{}}>
       <input type="text" name="name" placeholder="Company Name"  />
-      <input type="submit" value="Add Company" />
-  </form>
+      <input type="submit" value="Add Company" onClick={console.log()}/>
+ </form>
 </div>
 
 
 
 }
 
-export default AppCopmanyForm;
+export default AppCompanyForm;

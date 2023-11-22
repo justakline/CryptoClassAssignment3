@@ -14,6 +14,7 @@ const main = async () => {
   const[owner, student1, student2] = await hre.ethers.getSigners();
   const contractFactory = await hre.ethers.getContractFactory("CareerFair");
   const contract = await contractFactory.deploy()
+  console.log(`Address of owner is: ${owner}`)
 
   console.log("Testing adding a company that already exists");
 try {
