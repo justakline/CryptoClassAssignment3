@@ -8,9 +8,13 @@ const ConnectButton = (props) =>{
 
         console.log("No eth wallet detected")
        return <div>
-            <button className="Connect-Button" onClick={  ()=> {
-                  
-                    {}}}
+            <button className="Connect-Button" onClick={ async ()=> {
+               
+                    props.connectWallet()
+            
+                
+               
+            }}
                 >Connect Wallet
             </button>
            
