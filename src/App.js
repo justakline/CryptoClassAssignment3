@@ -8,6 +8,7 @@ import abi from './abi.json'
 import { Contract, utils } from 'ethers';
 import { Alert } from '@mui/material';
 import { ethers } from 'ethers';
+import Alerts from './Alerts';
 
 function App() {
 
@@ -15,23 +16,31 @@ function App() {
 
 
 const [wallets, setWallets]= useState(null)
-const [walletError, changeWalletError] = useState(false)
+const [walletError, setWalletError] = useState(false)
+const [addCompanyError, setAddCompanyError] = useState(false)
+const [enrollError, setEnrollError] = useState(false)
+const [unenrollError, setUnenrollError] = useState(false)
+const [attendeesZero, setAttendeesZero] = useState(false)
+const [attendees, setAttendees] = useState ([])
+
 
 const connectWallet = ()=> {
   
 
 //Phantom wallet has very wonky errors... In a try catch, if there is an error, it does not do the catch, so I am not dealing with it
+//But if you only use metamask then it works perfectly... like either you need it only installed, or if you have both installed,
+//then make sure when phantom wallet pops up and says to choose either metamask or phantom wallet automatically, use metamask
   if(window.ethereum && window.ethereum.isMetaMask){
       window.ethereum.request({ method: 'eth_requestAccounts' })
       .then(wallets => {
  
         console.log(wallets)
-        changeWalletError(false)
+        setWalletError(false)
         setWallets(wallets)
       })
       .catch(error => {
         console.error('Error fetching accounts from metamask:', error);
-        changeWalletError(true)
+        setWalletError(true)
         // Handle the error
       });
   }else{
@@ -55,6 +64,9 @@ const checkAccounts = async() => {
   }
 
 }
+
+
+
 //Check accounts connected every second and if they have changed
 useEffect(() => {
   const handleAccountsChanged = (accounts) => {
@@ -106,8 +118,18 @@ const getAttendees = async()=>{
     const signer = provider.getSigner();
 
    
-   const companies = await contract.functions.getAttendees()
-   console.log(companies[0])
+   const attendees = await contract.functions.getAttendees()
+   console.log(attendees[0])
+   setAttendees(attendees[0])
+   console.log("gere")
+   if(attendees[0].length == 0){
+     console.log("true")
+     setAttendeesZero(true)
+     
+    } else{
+      console.log("false")
+      setAttendeesZero(false)
+    }
   }else{
     console.log("Eth window no exist")
   }
@@ -125,17 +147,16 @@ const enroll = async() => {
     const signer = provider.getSigner();
     const contract = new ethers.Contract("0x9025c5E4341c4eF748763027c8b3EFf1C1503188", abi.abi, signer);
    
-   
-    getAttendees()
+
    const enrollTxn = await contract.functions.enroll()
    await enrollTxn.wait()
-   console.log("after")
-   getAttendees()
+
+   setEnrollError(false)
   }else{
     console.log("Eth window no exist")
   }
   } catch (error) {
-    
+    setEnrollError(true)
   }
  
 }
@@ -148,16 +169,17 @@ const unenroll = async() => {
     const contract = new ethers.Contract("0x9025c5E4341c4eF748763027c8b3EFf1C1503188", abi.abi, signer);
    
    
-    getAttendees()
+
    const unenrollTxn = await contract.functions.unenroll()
    await unenrollTxn.wait()
-   console.log("after")
-   getAttendees()
+  
+
+   setUnenrollError(false)
   }else{
     console.log("Eth window no exist")
   }
   } catch (error) {
-    
+    setUnenrollError(true)
   }
  
 }
@@ -176,12 +198,16 @@ const addCompany = async(company) => {
    await addCompanyTxn.wait()
    console.log("after")
    gettCompanies()
+   setAddCompanyError(false)
+
  
   }else{
     console.log("Eth window no exist")
   }
   } catch (error) {
     console.log(error)
+    console.log("cant add")
+    setAddCompanyError(true)
   }
  
 }
@@ -191,19 +217,14 @@ const addCompany = async(company) => {
   return (
  
     <div className="App">
-       {walletError?<div>
-             <Alert severity='warning' >Wallet Could NOT Be Connected</Alert> 
-             <ConnectButton connectWallet={connectWallet} />
-        
-          </div>
-        :
-              wallets?
-                 <div> </div>
-            :
-                <ConnectButton connectWallet={connectWallet} />
-        
+       <Alerts walletError={walletError} addCompanyError={addCompanyError} enrollError={enrollError} unenrollError={unenrollError}/>
+        {
+          wallets?
+            <div> </div>
+          :
+            <ConnectButton connectWallet={connectWallet} />
         }
-      
+    
       <AppCompanyForm addCompany={addCompany}/>
 
      
@@ -212,8 +233,21 @@ const addCompany = async(company) => {
        <button className="Unenroll-Button" onClick={unenroll}>Unenroll</button>
        <div className="SeeAttendees-Thingyyyy">
          <button className="SeeAttendees-Button" onClick={getAttendees}>See Attendees</button>
-         <button className="SeeAttendees-Button" onClick={getCompanies}>See Companies</button>
-       </div>
+         {
+         !attendeesZero?
+            attendees.map((item, index) => {
+              return <div key={index}> {item}</div>
+              })
+          :(
+
+            <div>No one is enrolled</div>
+            )
+        
+        
+        }
+
+        </div>
+       
       
      </div>
   )
